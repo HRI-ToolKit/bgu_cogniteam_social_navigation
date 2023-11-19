@@ -12,6 +12,16 @@ import math
 import rclpy
 from rclpy.node import Node
 import ament_index_python
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup,ReentrantCallbackGroup
+
+# action for nav2
+from rclpy.action import ActionClient
+from rclpy.task import Future
+from action_msgs.msg import GoalStatus
+from geometry_msgs.msg import PoseStamped,Pose
+from nav2_msgs.action import NavigateToPose,ComputePathToPose
+from nav2_msgs.srv import ManageLifecycleNodes
 
 package_name = 'social_navigation_ui'
 package_share_directory = ament_index_python.get_package_share_directory(package_name)
@@ -131,9 +141,46 @@ class PersonsGenerator:
 
         return (int(x),int(y))    
 
-class JsonImageLoaderApp(Node):
-    def __init__(self, root):
-        self.root = root
+class SocialNavigationUI(Node):
+    def __init__(self, executor):
+
+        super().__init__('social_navigation_ui_node')
+
+        self.executor:MultiThreadedExecutor = executor
+       
+        self.actions_cb_group = MutuallyExclusiveCallbackGroup()
+
+
+        self._action_client_goal = ActionClient(self, NavigateToPose, '/navigate_to_pose',callback_group=self.actions_cb_group)
+        self._action_client_goal_path = ActionClient(self, ComputePathToPose, '/compute_path_to_pose',callback_group=self.actions_cb_group)
+
+        #elf.get_logger().info('Waiting for action server...')
+        path_action_server = self._action_client_goal_path.wait_for_server(5)
+        if not path_action_server:
+            print('11111111111111111111')
+            #self.get_logger().error('ComputePathToPose action server is not available')
+            exit()
+
+        goal_action_server = self._action_client_goal.wait_for_server(5)
+        if not goal_action_server:
+            print('22222222222222')
+
+            #self.get_logger().error('NavigateToPose action server is not available')
+            exit()
+        self.get_logger().info('NavigateToPose and ComputePathToPose action server is up!')
+
+        # Set up service clients
+        self.cli = self.create_client(ManageLifecycleNodes, '/lifecycle_manager_navigation/manage_nodes',callback_group=self.actions_cb_group)
+        manage_nodes = self.cli.wait_for_service(5)
+        if not manage_nodes:
+            #self.get_logger().error('lifecycle_manager_navigation service is not available')
+            exit()
+        self.manage_lifecycle_nodes_req = ManageLifecycleNodes.Request()
+        #self.get_logger().info('lifecycle_manager_navigation serivce is up!') 
+
+        
+
+        self.root = tk.Tk()
         self.root.title("BGU social navigation")
         self.root.geometry("1000x1000")
         self.root.configure(bg="black")
@@ -155,27 +202,69 @@ class JsonImageLoaderApp(Node):
         # self.load_json_button = tk.Button(root, text="Load JSON", command=self.load_json)
         # self.load_json_button.pack(pady=10)
 
-        self.load_map_button = tk.Button(root, text="Initialize Map", command=self.load_map)
+        self.load_map_button = tk.Button(self.root, text="set path Map", command=self.set_path)
         self.load_map_button.pack(pady=10)
 
-        self.update_map_button = tk.Button(root, text="Generate map with persons", command=self.update_map)
+        self.update_map_button = tk.Button(self.root, text="Generate map with persons", command=self.update_map)
         self.update_map_button.pack(pady=10)
 
-        self.image_viewer = tk.Label(root)
+        self.image_viewer = tk.Label(self.root)
         self.image_viewer.pack(pady=10)
 
-    def load_json(self):
-        file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
-        if file_path:
-            with open(file_path, 'r') as json_file:
-                self.json_data = json.load(json_file)
-                # You can use self.json_data as needed
+        self.load_map()
+
+    def set_path(self):
+        
+        goalOnMap = PoseStamped()
+        goalOnMap.header.frame_id = 'map'
+        goalOnMap.pose.position.x = -7.2
+        goalOnMap.pose.position.y = -9.2
+        goalOnMap.pose.position.z = 0.0
+        goalOnMap.pose.orientation.w = 1.0   
+
+        path_msg = ComputePathToPose.Goal()
+        path_msg.pose = goalOnMap
+        # path_msg.planner_id = 'GridBased'
+
+        print('11111111111111')
+        self._send_goal_path_future = self._action_client_goal_path.send_goal_async(
+        path_msg)
+        print('2222222222222222')
+
+        self.executor.spin_until_future_complete(self._send_goal_path_future)
+
+        print('3333333333333333')
+        
+        self.goal_handle = self._send_goal_path_future.result()
+
+        print('4444444444444444')
+
+
+        if not self.goal_handle.accepted:
+            self.get_logger().error(f'Goal to ' + str(goal.pose.position.x) + ' ' +
+                       str(goal.pose.position.y) + ' was rejected!')
+            return False
+        
+        result:Future = self._send_goal_path_future.result().get_result_async()
+        self.executor.spin_until_future_complete(result)
+        path = result.result().result.path.poses
+        self.goal_handle = None
+        # print(' num_of_pose '+ str(path))
+
+        for i in range(len(path) - 1):
+            pix_1 = self.convert_pose_to_pix((path[i].pose.position.x,path[i].pose.position.y))
+            pix_2 = self.convert_pose_to_pix((path[i+1].pose.position.x,path[i+1].pose.position.y))
+            cv2.line(self.rgb_image, pix_1,pix_2 , (0, 255, 200), 2)
+
+        self.setImageViewer()
+
 
     def load_map(self):
         #file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")])
         #if file_path:
         self.image_path = package_share_directory+'/map.pgm'
         self.cv_map = cv2.imread(self.image_path, 0)
+        self.cv_map = cv2.flip(self.cv_map, 0)
 
         map_yaml_path = package_share_directory+'/map.yaml'
         # Open the YAML file and load its content
@@ -193,6 +282,10 @@ class JsonImageLoaderApp(Node):
        
         self.rgb_image = cv2.cvtColor(self.cv_map, cv2.COLOR_GRAY2RGB)
 
+        #robot position
+        
+        cv2.circle(self.rgb_image, self.convert_pose_to_pix((-2.5,0.3)), 5, (0,100,200), -1) 
+
         self.setImageViewer()
         
     def setImageViewer(self):
@@ -205,6 +298,8 @@ class JsonImageLoaderApp(Node):
     def update_map(self):
         if np.all(self.cv_map != None):
             print('bla')
+
+            self.load_map()
 
             persons = self.personsGenerator.generatePersons()
 
@@ -250,23 +345,58 @@ class JsonImageLoaderApp(Node):
         )
         cv2.arrowedLine(self.rgb_image, center, end_point, (255, 0, 0), thickness=2, tipLength=0.2)
 
+    def destroyNode(self):
+        self.destroy_node()
+    
+    def destroy_node(self):
+        self._action_client_goal.destroy()
+        self._action_client_goal_path.destroy()
+        # self.resetNav2()
+        self.cli.destroy()
+        super().destroy_node()
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = JsonImageLoaderApp(root)
-    root.mainloop()
+# if __name__ == "__main__":
+#     root = tk.Tk()
+#     app = SocialNavigationUI(root)
+#     root.mainloop()
 
 
 
 
-def main(args=None):
-    rclpy.init(args=args)
-    root = tk.Tk()
-    app = JsonImageLoaderApp(root)
-    root.mainloop()
+# def main(args=None):
+#     rclpy.init(args=args)
+#     root = tk.Tk()
+#     app = SocialNavigationUI(root)
+#     root.mainloop()
     
   
        
 
+# if __name__ == "__main__":
+#     main()    
+
+def main(args=None):
+    rclpy.init(args=args)
+
+    try:
+        executor = MultiThreadedExecutor(4)
+        app = SocialNavigationUI(executor)
+        executor.add_node(app)
+        flag = False
+        try:
+            #executor.spin()
+            app.root.mainloop()
+        except KeyboardInterrupt as e:
+            executor.shutdown()
+            app.destroyNode()
+            flag = True
+        finally:
+            if not flag:
+                executor.shutdown()
+                app.destroyNode()
+            
+    finally:
+        rclpy.shutdown()
+
 if __name__ == "__main__":
-    main()    
+    main()
