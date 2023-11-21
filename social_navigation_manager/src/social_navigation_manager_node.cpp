@@ -1,41 +1,166 @@
-#include <cstdio>
-
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp_lifecycle/lifecycle_node.hpp"
-#include "nav2_costmap_2d/costmap_2d_ros.hpp"
+// Include PointCloud2 message
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include "std_msgs/msg/string.hpp"
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/conversions.h>
+
+#include <memory>
+#include <chrono>
+// this brings in a boost system dependency,
+// will get undefined reference to `boost::system::generic_category()
+#include <pcl_conversions/pcl_conversions.h>
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
+using namespace std::chrono_literals;
 using namespace std;
+using std::placeholders::_1;
 
-
-class SocialNavigationManager : public rclcpp::Node
-{
-
-
-public:
-  SocialNavigationManager(): Node("social_navigation_manager")
-  { 
-
-    costmap_ros_->configure();
-    
-  }
-
-  ~SocialNavigationManager(){}
-
-private:
-
-
-private:
-  std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros_;
-
+struct Person {
+    float x;
+    float y;
+    float a;
+    float b;
+    float deg;
 };
 
+class PersonsPointCloudGenerator : public rclcpp::Node
+{
+public:
+  PersonsPointCloudGenerator() : Node("generate_point_cloud2")
+  {    
+    persons_subscriber_ = create_subscription<std_msgs::msg::String>(
+      "/persons", 10, std::bind(&PersonsPointCloudGenerator::persons_callback, this, 
+      std::placeholders::_1));
+
+    perosns_pc_pub_ = 
+      create_publisher<sensor_msgs::msg::PointCloud2>("/perosn_cloud",10);
+
+  }
+
+  ~PersonsPointCloudGenerator() {}
+
+private:
+
+  void persons_callback(const std_msgs::msg::String::SharedPtr msg){
+   
+    pcl::PointCloud<pcl::PointXYZRGB> cloud;
+    sensor_msgs::msg::PointCloud2::SharedPtr pc2_msg;   
+    pc2_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
+    pc2_msg->header.frame_id = frame_id_;
+
+    // Vector to store the structs
+    std::vector<Person> persons;
+
+    // Tokenize the string using ';' as a delimiter
+    std::istringstream tokenStream(msg->data);
+    std::string token;
+
+    while (std::getline(tokenStream, token, ';')) {
+      // Tokenize each element using ',' as a delimiter
+      std::istringstream elementStream(token);
+      std::string element;
+
+      Person person;
+
+      for (int i = 0; i < 5; ++i)
+      {
+        if (std::getline(elementStream, element, ',')) {
+          // Convert the string to float and store in the struct
+          switch (i)
+          {
+              case 0:
+                  person.x = std::stof(element);
+                  break;
+              case 1:
+                  person.y = std::stof(element);
+                  break;
+              case 2:
+                  person.a = std::stof(element);
+                  break;
+              case 3:
+                  person.b = std::stof(element);
+                  break;
+              case 4:
+                  person.deg = std::stof(element);
+                  break;
+              default:
+                  break;
+          }
+        }
+      }
+
+      persons.push_back(person);
+    }
+
+
+    for (const auto& person : persons) {
+      createEllipse(cloud, person.x, person.y, person.deg, person.a,
+        person.b, 0.05);
+    }         
+
+    pcl::toROSMsg(cloud, *pc2_msg);   
+
+    pc2_msg->header.stamp = now();
+    pc2_msg->header.frame_id = frame_id_;
+    perosns_pc_pub_->publish(*pc2_msg);
+  
+  }
+
+
+  void createEllipse(pcl::PointCloud<pcl::PointXYZRGB> &cloud,
+    float x_center, float y_center, float angle_degrees,
+    float a, float b, float resolution) {    
+
+    // Orientation angle in degrees
+    double angle_radians = angle_degrees * M_PI / 180.0;
+
+
+    for (double theta = 0; theta <= 2 * M_PI; theta += resolution) {
+        double x = x_center + a * cos(theta) * cos(angle_radians) - b * sin(theta) * sin(angle_radians);
+        double y = y_center + a * cos(theta) * sin(angle_radians) + b * sin(theta) * cos(angle_radians);
+
+       // TODO(lucasw) normals
+        pcl::PointXYZRGB pt;
+        // pt = pcl::PointXYZRGB(255, 0, 255);
+        pt.x = x;
+        pt.y = y;
+        pt.z = 0.0;
+
+        const uint8_t& pixel_r = 255;
+        const uint8_t& pixel_g = 0;
+        const uint8_t& pixel_b = 255;
+        // Define point color
+        uint32_t rgb = (static_cast<uint32_t>(pixel_r) << 16
+            | static_cast<uint32_t>(pixel_g) << 8
+            | static_cast<uint32_t>(pixel_b));
+        pt.rgb = *reinterpret_cast<float*>(&rgb);
+        cloud.points.push_back(pt);
+    }   
+
+  }
+ 
+
+private:  
+
+  std::string frame_id_ = "map";
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr persons_subscriber_;
+  
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr perosns_pc_pub_;
+};
 
 int main(int argc, char * argv[])
 {
-  cerr<<"1111 "<<endl;
   rclcpp::init(argc, argv);
 
-  rclcpp::spin(std::make_shared<SocialNavigationManager>());
+ 
+  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+  rclcpp::spin(std::make_shared<PersonsPointCloudGenerator>());
   rclcpp::shutdown();
   return 0;
 }

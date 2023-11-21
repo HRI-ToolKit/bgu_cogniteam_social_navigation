@@ -211,18 +211,24 @@ global_costmap:
       track_unknown_space: True
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
-        obstacle_min_range: 0.35
-        observation_persistence: 1.0
-        footprint_clearing_enabled: True
+        obstacle_min_range: 0.0
+        observation_persistence: 30.0
+        footprint_clearing_enabled: False
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan
-        scan:
-          topic: /scan
+        observation_sources:  pointcloud
+        # scan:
+        #   topic: /scan
+        #   max_obstacle_height: 2.0
+        #   clearing: True
+        #   marking: True
+        #   data_type: "LaserScan"        
+        pointcloud:
+          topic: /perosn_cloud
           max_obstacle_height: 2.0
-          clearing: True
+          clearing: False
           marking: True
-          data_type: "LaserScan"
+          data_type: "PointCloud2"
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True

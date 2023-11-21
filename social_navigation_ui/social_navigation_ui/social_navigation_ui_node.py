@@ -14,6 +14,8 @@ from rclpy.node import Node
 import ament_index_python
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup,ReentrantCallbackGroup
+from sensor_msgs.msg import PointCloud2, PointField
+from std_msgs.msg import String
 
 # action for nav2
 from rclpy.action import ActionClient
@@ -25,11 +27,6 @@ from nav2_msgs.srv import ManageLifecycleNodes
 
 package_name = 'social_navigation_ui'
 package_share_directory = ament_index_python.get_package_share_directory(package_name)
-
-# ros2 run nav2_map_server map_server --ros-args --params-file /home/yakir/bgu_cogniteam_social_navigation_ws/src/social_navigation_ui/map_server_params.yaml 
-# ros2 lifecycle set /map_server configure 
-# ros2 lifecycle set /map_server activate
-
 
 
 class Person:
@@ -157,14 +154,11 @@ class SocialNavigationUI(Node):
         #elf.get_logger().info('Waiting for action server...')
         path_action_server = self._action_client_goal_path.wait_for_server(5)
         if not path_action_server:
-            print('11111111111111111111')
             #self.get_logger().error('ComputePathToPose action server is not available')
             exit()
 
         goal_action_server = self._action_client_goal.wait_for_server(5)
         if not goal_action_server:
-            print('22222222222222')
-
             #self.get_logger().error('NavigateToPose action server is not available')
             exit()
         self.get_logger().info('NavigateToPose and ComputePathToPose action server is up!')
@@ -179,6 +173,8 @@ class SocialNavigationUI(Node):
         #self.get_logger().info('lifecycle_manager_navigation serivce is up!') 
 
         
+        self.persons_publisher = self.create_publisher(String, '/persons', 10)
+
 
         self.root = tk.Tk()
         self.root.title("BGU social navigation")
@@ -196,11 +192,7 @@ class SocialNavigationUI(Node):
         #map vlaues
         self.map_resolution = 0.0
         self.map_origin_position_x = 0.0
-        self.map_origin_position_y = 0.0
-
-        # Create GUI components
-        # self.load_json_button = tk.Button(root, text="Load JSON", command=self.load_json)
-        # self.load_json_button.pack(pady=10)
+        self.map_origin_position_y = 0.0       
 
         self.load_map_button = tk.Button(self.root, text="set path Map", command=self.set_path)
         self.load_map_button.pack(pady=10)
@@ -208,10 +200,13 @@ class SocialNavigationUI(Node):
         self.update_map_button = tk.Button(self.root, text="Generate map with persons", command=self.update_map)
         self.update_map_button.pack(pady=10)
 
+
         self.image_viewer = tk.Label(self.root)
         self.image_viewer.pack(pady=10)
 
         self.load_map()
+    
+
 
     def set_path(self):
         
@@ -289,7 +284,7 @@ class SocialNavigationUI(Node):
         self.setImageViewer()
         
     def setImageViewer(self):
-
+        
         tk_image = ImageTk.PhotoImage(Image.fromarray(self.rgb_image))
         self.image_viewer.configure(image=tk_image)
         self.image_viewer.image = tk_image  # Keep a reference to avoid garbage collection issues
@@ -303,9 +298,21 @@ class SocialNavigationUI(Node):
 
             persons = self.personsGenerator.generatePersons()
 
+            array_of_persons = []           
+        
+
             for person in persons:
                 print('draw----------')
                 self.drawPerson(person)
+                array_of_persons.append([person.position_m[0],
+                    person.position_m[1],person.axes_length_a_m,person.axes_length_b_m, person.yaw_deg_angle])
+
+            array_string = ';'.join(','.join(map(str, obj)) for obj in array_of_persons)
+
+            # Create and publish the string message
+            msg = String()
+            msg.data = array_string
+            self.persons_publisher.publish(msg)
 
             self.setImageViewer()
         else:
