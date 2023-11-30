@@ -120,7 +120,7 @@ def generate_launch_description():
             name='base_footprint_camera_link_tf_node',
             package='tf2_ros',
             executable='static_transform_publisher',
-            arguments=['-2.5', '0.3', '0', '0', '0', '0','odom','base_footprint']
+            arguments=['-5.0', '7.0', '0', '0', '0', '0','odom','base_footprint']
         ) 
         ,Node(
             name='camera_link_camera_color_optical_frame_tf_node',
@@ -128,10 +128,10 @@ def generate_launch_description():
             executable='static_transform_publisher',
             arguments=['0', '0.0', '0', '0', '0', '0','map','odom']
         )
-        # ,Node(
-        #     package='social_navigation_ui',
-        #     executable='social_navigation_ui_node',
-        # )      
+        ,Node(
+            package='social_navigation_manager',
+            executable='social_navigation_manager_node',
+        )      
                            
     ])
 

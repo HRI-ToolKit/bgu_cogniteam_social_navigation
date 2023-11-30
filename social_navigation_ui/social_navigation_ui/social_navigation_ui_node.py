@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox 
+
 from PIL import Image, ImageTk
 import json
 import cv2
@@ -38,26 +40,22 @@ class SocialNavigationUI():
         self.cv_map = None 
         self.rgb_image = None 
 
+        self.robot_radius_m = 0.3
         self.personsGenerator = None 
-        self.num_of_persons = 50
+        self.num_of_persons = 10
         self.persons = None
         
-        self.robot_position = (-2.5,0.3) # take from the launch
+        self.robot_position = (-5.0,7.0) # take from the launch
         self.goal = None
-
 
         #map vlaues
         self.map_resolution = 0.0
         self.map_origin_position_x = 0.0
-        self.map_origin_position_y = 0.0       
+        self.map_origin_position_y = 0.0      
 
 
         self.update_map_button = tk.Button(self.root, text="Generate map with persons", command=self.setPersonsCmd)
-        self.update_map_button.pack(pady=10)
-
-        self.clear_cost_map_button = tk.Button(self.root, text="clear costmap", command=self.ros_wrapper.clearCostMap)
-        self.clear_cost_map_button.pack(pady=10)
-
+        self.update_map_button.pack(pady=10)       
        
         self.image_viewer = tk.Label(self.root)
         self.image_viewer.pack(pady=10)      
@@ -66,6 +64,10 @@ class SocialNavigationUI():
         self.image_viewer.bind("<Button-1>", self.on_mouse_click)
 
         self.load_map()   
+
+        self.drawRobotPosition()
+
+        self.setImageViewer()
     
 
     def set_path(self):
@@ -73,6 +75,12 @@ class SocialNavigationUI():
         path = self.ros_wrapper.calculatePath(self.goal)
 
         self.rgb_image = cv2.cvtColor(self.cv_map, cv2.COLOR_GRAY2RGB)
+
+        if self.robot_position != None:
+            self.drawRobotPosition()
+
+        if self.persons != None:
+            self.drawPersons()
         
         if path != None:
             for i in range(len(path) - 1):
@@ -80,10 +88,26 @@ class SocialNavigationUI():
                      self.map_resolution, self.map_origin_position_x, self.map_origin_position_y)
                 pix_2 = convert_pose_to_pix((path[i+1].pose.position.x,path[i+1].pose.position.y),
                      self.map_resolution, self.map_origin_position_x, self.map_origin_position_y)
-                cv2.line(self.rgb_image, pix_1,pix_2 , (0, 255, 200), 2)
+                # cv2.circle(self.rgb_image, pix_1 , int(convert_meters_to_pix(self.robot_radius_m, 
+                #     self.map_resolution)), (0,100,0), 1) 
+                cv2.line(self.rgb_image, pix_1,pix_2 , (0, 255, 200), int(convert_meters_to_pix(self.robot_radius_m, 
+                    self.map_resolution)))
+
+
+        else:
+            messagebox.showerror("error", "path is invalid") 
 
         self.setImageViewer()
 
+    def drawRobotPosition(self):
+
+        #robot position        
+        robot_pix = convert_pose_to_pix((self.robot_position[0], self.robot_position[1]), 
+            self.map_resolution, self.map_origin_position_x, self.map_origin_position_y)
+        
+        print('robot_pix ' + str(robot_pix))
+        cv2.circle(self.rgb_image,robot_pix , int(convert_meters_to_pix(self.robot_radius_m,
+             self.map_resolution)), (0,100,200), -1) 
 
     def load_map(self):
         
@@ -107,14 +131,7 @@ class SocialNavigationUI():
        
         self.rgb_image = cv2.cvtColor(self.cv_map, cv2.COLOR_GRAY2RGB)
 
-        #robot position        
-        robot_pix = convert_pose_to_pix((self.robot_position[0], self.robot_position[1]), 
-            self.map_resolution, self.map_origin_position_x, self.map_origin_position_y)
         
-        print('robot_pix ' + str(robot_pix))
-        cv2.circle(self.rgb_image,robot_pix , 5, (0,100,200), -1) 
-
-        self.setImageViewer()
 
     def on_mouse_click(self, event):
         # Get the x and y coordinates of the mouse click
@@ -143,10 +160,16 @@ class SocialNavigationUI():
         if np.all(self.cv_map != None):
 
             self.load_map()
+
+            self.drawRobotPosition()
             
             self.generatePersons()
             
-            self.drawAndPublishPersons()
+            self.drawPersons()
+
+            self.publishPersons()
+
+            self.ros_wrapper.clearCostMap()
 
             self.setImageViewer()
 
@@ -154,12 +177,18 @@ class SocialNavigationUI():
 
         self.persons = self.personsGenerator.generatePersons()
 
-    def drawAndPublishPersons(self):
+    def drawPersons(self):
 
         array_of_persons = []        
 
         for person in self.persons:
-            self.drawPerson(person)
+            self.drawPerson(person)      
+
+    def publishPersons(self):
+
+        array_of_persons = []        
+
+        for person in self.persons:
             array_of_persons.append([person.position_m[0],
                 person.position_m[1],person.axes_length_a_m,person.axes_length_b_m, person.yaw_deg_angle])
 
@@ -167,7 +196,6 @@ class SocialNavigationUI():
 
         self.ros_wrapper.publishPersons(array_string)
 
-       
 
     def drawPerson(self, person):
         center = convert_pose_to_pix((person.position_m[0],person.position_m[1]), 
@@ -223,3 +251,27 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
+
+# def main(args=None):
+#     rclpy.init(args=args)
+#     # Load the grayscale image
+#     img = cv2.imread('/home/yakir/bgu_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/map.pgm', cv2.IMREAD_GRAYSCALE)
+
+#     # Check if the image is loaded successfully
+#     if img is None:
+#         print("Error: Unable to load the image.")
+        
+
+#     # Change all pixels with intensity 255 to 254
+#     img[(img != 254) & (img != 0)] = 254
+
+#     # Save the modified image as a PGM file
+#     cv2.imwrite('/home/yakir/bgu_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/map.pgm', img)
+
+
+
+# if __name__ == "__main__":
+#     main()
+
+
+    
