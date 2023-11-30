@@ -524,9 +524,12 @@ Costmap2DROS::resetLayers()
 
   // Reset each of the plugins
   std::vector<std::shared_ptr<Layer>> * plugins = layered_costmap_->getPlugins();
+
   for (std::vector<std::shared_ptr<Layer>>::iterator plugin = plugins->begin();
     plugin != plugins->end(); ++plugin)
   {
+    std::cerr<<"plugin name "<<(*plugin)->getName()<<std::endl;
+
     (*plugin)->reset();
   }
 }

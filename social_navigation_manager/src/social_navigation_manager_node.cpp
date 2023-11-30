@@ -47,7 +47,7 @@ public:
 private:
 
   void persons_callback(const std_msgs::msg::String::SharedPtr msg){
-   
+    
     pcl::PointCloud<pcl::PointXYZRGB> cloud;
     sensor_msgs::msg::PointCloud2::SharedPtr pc2_msg;   
     pc2_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
@@ -108,6 +108,8 @@ private:
     pc2_msg->header.stamp = now();
     pc2_msg->header.frame_id = frame_id_;
     perosns_pc_pub_->publish(*pc2_msg);
+
+    cerr<<"publish cloud "<<endl;
   
   }
 
@@ -119,14 +121,11 @@ private:
     // Orientation angle in degrees
     double angle_radians = angle_degrees * M_PI / 180.0;
 
-
     for (double theta = 0; theta <= 2 * M_PI; theta += resolution) {
         double x = x_center + a * cos(theta) * cos(angle_radians) - b * sin(theta) * sin(angle_radians);
         double y = y_center + a * cos(theta) * sin(angle_radians) + b * sin(theta) * cos(angle_radians);
 
-       // TODO(lucasw) normals
         pcl::PointXYZRGB pt;
-        // pt = pcl::PointXYZRGB(255, 0, 255);
         pt.x = x;
         pt.y = y;
         pt.z = 0.0;
