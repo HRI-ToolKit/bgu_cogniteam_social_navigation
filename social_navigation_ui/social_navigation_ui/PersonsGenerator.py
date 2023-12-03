@@ -39,15 +39,36 @@ class PersonsGenerator:
 
             if count >= self.num_of_persons:
                 break
+            
+            # r_x  = 0.25
+            # l_x = -0.7
+            # f_y = 1.0
+            # b_y = -0.5
 
-            person = Person(self.map_resolution)
-            person.position_m = self.generate_position(valid_positions)
-            person.yaw_deg_angle = self.generate_random_yaw()
+            # r_x  = 0.5
+            # l_x = -0.5
+            # f_y = 1.0
+            # b_y = -1.0
+
+            r_x  = 0.7
+            l_x = -0.3
+            f_y = 1.0
+            b_y = 0.0
+
+            yaw = self.generate_random_yaw()
+            position = self.generate_position(valid_positions)
+
+            person = Person(position,
+                yaw, 
+                self.map_resolution,
+                r_x, l_x,f_y, b_y )
+            
 
             if self.isPersonsOnMap(person):
                 persons.append(person)
-
-            count+= 1    
+           
+            
+            count+= 1
 
         return persons
 

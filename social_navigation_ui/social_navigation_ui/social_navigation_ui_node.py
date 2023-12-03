@@ -42,7 +42,7 @@ class SocialNavigationUI():
 
         self.robot_radius_m = 0.3
         self.personsGenerator = None 
-        self.num_of_persons = 10
+        self.num_of_persons = 1
         self.persons = None
         
         self.robot_position = (-5.0,7.0) # take from the launch
@@ -167,7 +167,7 @@ class SocialNavigationUI():
             
             self.drawPersons()
 
-            self.publishPersons()
+            #self.publishPersons()
 
             self.ros_wrapper.clearCostMap()
 
@@ -201,16 +201,24 @@ class SocialNavigationUI():
         center = convert_pose_to_pix((person.position_m[0],person.position_m[1]), 
              self.map_resolution, self.map_origin_position_x, self.map_origin_position_y)
         
-        axes_a = int(convert_meters_to_pix(person.axes_length_a_m, self.map_resolution))
-        axes_b = int(convert_meters_to_pix(person.axes_length_b_m, self.map_resolution)) 
-        
-        angle = person.yaw_deg_angle
-        startAngle = 0
-        endAngle = 360
-        color = (128, 0, 128)  # Green color
+        points_m = person.getPoints()
+        pixel_points = []
+        for pointM in points_m:
+            if math.isnan(pointM[0]) or math.isnan(pointM[1]):
+                continue
 
-        cv2.ellipse(self.rgb_image, center, (axes_a, axes_b), angle,
-             startAngle, endAngle, color, thickness=-1)
+            pix = convert_pose_to_pix((pointM[0],pointM[1]), 
+             self.map_resolution, self.map_origin_position_x, self.map_origin_position_y)
+            pixel_points.append(((pix[0]),(pix[1])))
+
+        # Convert the pixel list to NumPy array
+        pts = np.array(pixel_points, np.int32)
+
+        # Reshape the array into a 2D array
+        pts = pts.reshape((-1, 1, 2))
+
+        # Draw the polygon on the image
+        cv2.fillPoly(self.rgb_image, [pts], color=(147,112,219))
         
         # Length of the arrow
         arrow_length = convert_meters_to_pix(1.0, self.map_resolution)
@@ -221,6 +229,9 @@ class SocialNavigationUI():
             int(center[1] + arrow_length * math.sin(math.radians(person.yaw_deg_angle)))
         )
         cv2.arrowedLine(self.rgb_image, center, end_point, (255, 0, 0), thickness=2, tipLength=0.2)
+
+        cv2.circle(self.rgb_image,center , int(convert_meters_to_pix(self.robot_radius_m,
+             self.map_resolution)), (139,0,139), -1) 
 
     def destroyNode(self):
         self.ros_wrapper.destroy_node()

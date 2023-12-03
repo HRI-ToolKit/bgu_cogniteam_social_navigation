@@ -13,20 +13,26 @@ class Oval:
         self.backward_y = forward_y
         self.resolution = resolution
 
+        print('point2d ' + str(point2d ))
+        print('deg_angle ' + str(deg_angle ))
+        print('right_x ' + str(right_x ))
+        print('left_x ' + str(left_x ))
+        print('forward_y ' + str(forward_y ))
+        print('backward_y ' + str(backward_y ))
+        print('resolution ' + str(resolution ))
+
+
         self.points = None
 
         self.create()
     
     def create(self):
 
-        data = np.array([[0.3, 1.0, -2.0, 3, 2]])
-
         # Ellipse Vectors, Right x, Left x, Forward y, Backward y
         fig, ax = plt.subplots()
         plt.legend()
         plt.grid(True)        
       
-        z = 0.3
         xp = self.right_x
         xn = self.left_x
         yp = self.forward_y
@@ -59,7 +65,7 @@ class Oval:
         points = list(zip(X, Y))
 
         # Convert the angle from degrees to radians
-        angle_radians = np.radians(self.deg_angle)
+        angle_radians = (np.radians(self.deg_angle))
 
         # Perform the rotation
         rotation_matrix = np.array([[np.cos(angle_radians), -np.sin(angle_radians)],
@@ -70,23 +76,34 @@ class Oval:
         # Translate each point based on the reference point
         self.points = [(point[0] + self.point2d[0], point[1] + self.point2d[1]) for point in rotated_points]
        
-        X_vis, Y_vis = zip(*self.points)
+        # X_vis, Y_vis = zip(*self.points)
 
-        plt.plot(X_vis, Y_vis, label=f'V in m/s = {z}')
+        # plt.plot(X_vis, Y_vis, label=f'V in m/s = {0.3}')
         
-        # plt.plot(X, Y, label=f'V in m/s = {z}')
 
+        # plt.title('Proxemics Schematic map')
+        # plt.xlabel('Distance in m')
+        # plt.ylabel('Distance in m')
+        # plt.xlim([-10, 10])
+        # plt.ylim([-10, 10])
+        # plt.axhline(0, color='black',linewidth=0.5)
+        # plt.axvline(0, color='black',linewidth=0.5)
+        # plt.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
+        # plt.legend()
 
-        plt.title('Proxemics Schematic map')
-        plt.xlabel('Distance in m')
-        plt.ylabel('Distance in m')
-        plt.xlim([-10, 10])
-        plt.ylim([-10, 10])
-        plt.axhline(0, color='black',linewidth=0.5)
-        plt.axvline(0, color='black',linewidth=0.5)
-        plt.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
-        plt.legend()
+        # plt.show()
 
-        plt.show()
-
-oval = Oval((5.0,5.0), 0, 2.0, -2.0, 3, 4, 0.01)
+    def getOvalPoints(self):
+        
+        print('the lllllllllllllen is '+ str(len(self.points)))
+        return self.points
+        
+# oval = Oval((0.0,0.0), 31, 0.25, -0.7, 1, -0.5, 0.04)
+# print(oval.getOvalPoints())
+# point2d (0.0, 0.0)
+# deg_angle 31.930021128213845
+# right_x 0.25
+# left_x -0.7
+# forward_y 1.0
+# backward_y -0.5
+# resolution 0.04

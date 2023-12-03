@@ -3,7 +3,7 @@ from social_navigation_ui.Oval import Oval
 
 class Person:
     
-    def __init__(self, position, yaw_deg_angle,  map_resolution):
+    def __init__(self, position, yaw_deg_angle, map_resolution,  r_x , l_x, f_y, b_y):
         
         self.map_resolution = map_resolution
 
@@ -11,9 +11,18 @@ class Person:
 
         self.yaw_deg_angle = yaw_deg_angle
 
-        self.position_m = (0.0,0.0)
+        self.position_m = position
 
-        self.oval = Oval(self.position_m, )
+        self.oval = Oval(self.position_m,self.yaw_deg_angle, r_x, l_x, f_y, b_y, self.map_resolution )
 
-      
+
+    def getPoints(self):
+        
+        ovalPoints = self.oval.getOvalPoints()  
+        print('the ovalPoints lllll is '+ str(len(ovalPoints)))
+
+        return ovalPoints
+        
+
+        
 
