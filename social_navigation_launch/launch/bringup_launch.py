@@ -48,6 +48,12 @@ def generate_launch_description():
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
 
+    
+    # DeclareLaunchArgument('map_path',
+    #     default_value='/home/yakir/bgu_cogniteam_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/'
+    #     , description=''),    
+
+        
     declare_namespace_cmd = DeclareLaunchArgument(
         'namespace',
         default_value='',
@@ -89,6 +95,8 @@ def generate_launch_description():
         'autostart', default_value='true',
         description='Automatically startup the nav2 stack')
 
+
+
     # Specify the actions
     bringup_cmd_group = GroupAction([
         PushRosNamespace(
@@ -101,7 +109,7 @@ def generate_launch_description():
                                                        'localization_launch.py')),
             condition=IfCondition(PythonExpression(['not ', slam])),
             launch_arguments={'namespace': namespace,
-                              'map': '/home/yakir/bgu_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/map.yaml',
+                              'map': '/home/yakir/bgu_cogniteam_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/map.yaml',
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
@@ -116,22 +124,43 @@ def generate_launch_description():
                               'default_bt_xml_filename': default_bt_xml_filename,
                               'use_lifecycle_mgr': 'false',
                               'map_subscribe_transient_local': 'true'}.items()),
+        
+        # Declare launch arguments for initial pose x and y
+        DeclareLaunchArgument('initial_pose_x', default_value='-5.0',description=''),
+        DeclareLaunchArgument('initial_pose_y', default_value='7.0',description=''),
+
         Node(
-            name='base_footprint_camera_link_tf_node',
             package='tf2_ros',
             executable='static_transform_publisher',
-            arguments=['-5.0', '7.0', '0', '0', '0', '0','odom','base_footprint']
-        ) 
+            output='screen',
+            arguments=[
+                LaunchConfiguration('initial_pose_x'),
+                LaunchConfiguration('initial_pose_y'),
+                '0', '0', '0', '0', 'odom', 'base_footprint'
+            ]
+        )
         ,Node(
             name='camera_link_camera_color_optical_frame_tf_node',
             package='tf2_ros',
             executable='static_transform_publisher',
             arguments=['0', '0.0', '0', '0', '0', '0','map','odom']
-        )
-        ,Node(
+        ),      
+
+        Node(
+            name='social_navigation_ui_node',
+            package='social_navigation_ui',
+            executable='social_navigation_ui_node',
+            parameters=[
+                {'initial_pose_x': LaunchConfiguration('initial_pose_x')},
+                {'initial_pose_y': LaunchConfiguration('initial_pose_y')},
+                {'map':'/home/yakir/bgu_cogniteam_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/'}]
+
+        ),
+        Node(
+            name='social_navigation_manager_node',
             package='social_navigation_manager',
-            executable='social_navigation_manager_node',
-        )      
+            executable='social_navigation_manager_node'            
+        )    
                            
     ])
 

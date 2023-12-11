@@ -5,15 +5,13 @@ class Person:
     
     def __init__(self, position, yaw_deg_angle, map_resolution,  r_x , l_x, f_y, b_y):
         
-        self.map_resolution = map_resolution
-
         self.position = position
 
         self.yaw_deg_angle = yaw_deg_angle
 
-        self.position_m = position
+        self.map_resolution = map_resolution
 
-        self.oval = Oval(self.position_m,self.yaw_deg_angle, r_x, l_x, f_y, b_y, self.map_resolution )
+        self.oval = Oval(self.position, self.yaw_deg_angle, r_x, l_x, f_y, b_y, self.map_resolution )
 
 
     def getPoints(self):

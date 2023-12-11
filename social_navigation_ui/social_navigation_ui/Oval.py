@@ -1,16 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+import math
 
 class Oval:
-
     def __init__(self, point2d, deg_angle, right_x, left_x, forward_y, backward_y, resolution):
         self.point2d = point2d
         self.deg_angle = deg_angle
         self.right_x = right_x
         self.left_x =   left_x
         self.forward_y = forward_y
-        self.backward_y = forward_y
+        self.backward_y = backward_y
         self.resolution = resolution
 
         print('point2d ' + str(point2d ))
@@ -95,7 +94,13 @@ class Oval:
 
     def getOvalPoints(self):
         
-        print('the lllllllllllllen is '+ str(len(self.points)))
+        tmp = []
+        for p in self.points:
+            if math.isnan(p[0]) or math.isnan(p[1]):
+                    continue
+            tmp.append(p)
+
+        self.points = tmp
         return self.points
         
 # oval = Oval((0.0,0.0), 31, 0.25, -0.7, 1, -0.5, 0.04)
