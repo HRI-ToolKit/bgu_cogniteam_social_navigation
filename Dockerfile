@@ -36,12 +36,12 @@ WORKDIR /bgu_social_navigation_ws/
 
 RUN . /opt/ros/foxy/setup.sh && colcon build --symlink-install --packages-skip social_navigation_launch social_navigation_manager social_navigation_ui
 
-# # Set up an entry point script
-# COPY entrypoint.sh /bgu_social_navigation_ws/entrypoint.sh
-# RUN chmod +x /bgu_social_navigation_ws/entrypoint.sh
+# Set up an entry point script
+COPY entrypoint.sh /bgu_social_navigation_ws/entrypoint.sh
+RUN chmod +x /bgu_social_navigation_ws/entrypoint.sh
 
-# # Entrypoint script
-# ENTRYPOINT ["/bgu_social_navigation_ws/entrypoint.sh"]
+# Entrypoint script
+ENTRYPOINT ["/bgu_social_navigation_ws/entrypoint.sh"]
 
 RUN . /opt/ros/foxy/setup.sh . && . /bgu_social_navigation_ws/install/setup.sh && colcon build --symlink-install --packages-select social_navigation_launch social_navigation_manager social_navigation_ui
 

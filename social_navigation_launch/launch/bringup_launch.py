@@ -109,7 +109,7 @@ def generate_launch_description():
                                                        'localization_launch.py')),
             condition=IfCondition(PythonExpression(['not ', slam])),
             launch_arguments={'namespace': namespace,
-                              'map': '/home/yakir/bgu_cogniteam_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/map.yaml',
+                              'map': '/bgu_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/map.yaml',
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
@@ -153,7 +153,7 @@ def generate_launch_description():
             parameters=[
                 {'initial_pose_x': LaunchConfiguration('initial_pose_x')},
                 {'initial_pose_y': LaunchConfiguration('initial_pose_y')},
-                {'map':'/home/yakir/bgu_cogniteam_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/'}]
+                {'map':'/bgu_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/'}]
 
         ),
         Node(
