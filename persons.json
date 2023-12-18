@@ -1,8 +1,8 @@
 {
   "persons": [
     {
-      "position_x": "0.0",
-      "position_y": "0.0",
+      "position_x": "-1.0",
+      "position_y": "1.0",
       "yaw_deg_angle": "0",
       "right_x": "0.3",
       "left_x": "-0.3",
@@ -10,12 +10,12 @@
       "backward_y": "-0.3"
     },
     {
-      "position_x": "5.0",
+      "position_x": "-1.0",
       "position_y": "6.0",
-      "yaw_deg_angle": "0",
-      "right_x": "0.3",
+      "yaw_deg_angle": "90",
+      "right_x": "0.5",
       "left_x": "-0.3",
-      "forward_y": "0.3",
+      "forward_y": "1.3",
       "backward_y": "-0.3"
     }    
   ]
