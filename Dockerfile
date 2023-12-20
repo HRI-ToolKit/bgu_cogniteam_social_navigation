@@ -27,7 +27,7 @@ RUN    pip3 install Pillow
 
 RUN    apt-get install ros-foxy-pcl-ros -y && apt-get install ros-foxy-gazebo-ros-pkgs -y && apt-get install ros-foxy-ompl -y && apt-get  install libceres-dev -y &&  apt-get install ros-foxy-test-msgs -y && apt-get install ros-foxy-behaviortree-cpp-v3 -y && apt-get install graphicsmagick libgraphicsmagick++1-dev -y
 RUN    apt-get install python3-pil python3-pil.imagetk -y
-
+RUN     apt update 
     
 WORKDIR /bgu_social_navigation_ws/src
 

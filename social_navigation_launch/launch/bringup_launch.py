@@ -34,6 +34,7 @@ def generate_launch_description():
     launch_dir = os.path.join(bringup_dir, 'launch')
     nav2_dir = os.path.join(bringup_dir, 'launch')
 
+    social_navigation_dir = get_package_share_directory('social_navigation_ui')
 
     # Create the launch configuration variables
     namespace = LaunchConfiguration('namespace')
@@ -109,7 +110,7 @@ def generate_launch_description():
                                                        'localization_launch.py')),
             condition=IfCondition(PythonExpression(['not ', slam])),
             launch_arguments={'namespace': namespace,
-                              'map': '/bgu_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/map.yaml',
+                              'map': os.path.join(social_navigation_dir,'map.yaml'),#'/home/yakir/bgu_cogniteam_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/map.yaml',
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
@@ -153,7 +154,7 @@ def generate_launch_description():
             parameters=[
                 {'initial_pose_x': LaunchConfiguration('initial_pose_x')},
                 {'initial_pose_y': LaunchConfiguration('initial_pose_y')},
-                {'map':'/bgu_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/'}]
+                {'map':  os.path.join(social_navigation_dir,'')}]#'/home/yakir/bgu_cogniteam_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/'}]
 
         ),
         Node(
