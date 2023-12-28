@@ -96,7 +96,7 @@ class SocialNavigationUI():
         if self.persons != None:
             self.drawPersons()
         
-        if path != None:
+        if path != None and self.goal_pix != None:
             for i in range(len(path) - 1):
                 pix_1 = convert_pose_to_pix((path[i].pose.position.x,path[i].pose.position.y),
                      self.map_resolution, self.map_origin_position_x, self.map_origin_position_y)
@@ -110,8 +110,10 @@ class SocialNavigationUI():
             goal_x_str = "{:.2f}".format(round(self.goal[0]), 2) 
             goal_y_str = "{:.2f}".format(round(self.goal[1]), 2) 
 
- 
-            cv2.putText(self.rgb_image, '('+goal_x_str+','+goal_y_str+')' ,self.goal_pix, 1, 1, (0,0,0), 2)
+            self.ros_wrapper.get_logger().info(f"goal_x_str: {goal_x_str},goal_y_str: {goal_y_str}")
+
+            
+            cv2.putText(self.rgb_image, '('+goal_x_str+','+goal_y_str+')' , tuple(self.goal_pix), 1, 1, (0,0,0), 2)
     
 
 
