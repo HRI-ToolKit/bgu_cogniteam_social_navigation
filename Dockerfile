@@ -24,12 +24,13 @@ RUN    apt-get install git -y
 RUN    apt install ros-foxy-desktop python3-argcomplete -y 
 RUN    apt install python3-pip -y && pip3 install -U colcon-common-extensions 
 RUN    pip3 install Pillow
-
 RUN    apt-get install ros-foxy-pcl-ros -y && apt-get install ros-foxy-gazebo-ros-pkgs -y && apt-get install ros-foxy-ompl -y && apt-get  install libceres-dev -y &&  apt-get install ros-foxy-test-msgs -y && apt-get install ros-foxy-behaviortree-cpp-v3 -y && apt-get install graphicsmagick libgraphicsmagick++1-dev -y
 RUN    apt-get install python3-pil python3-pil.imagetk -y
-RUN     apt update 
+RUN    apt update 
     
 WORKDIR /bgu_social_navigation_ws/src
+RUN    apt update 
+
 
 RUN git clone https://github.com/HRI-ToolKit/bgu_cogniteam_social_navigation.git && cd ..
 WORKDIR /bgu_social_navigation_ws/
