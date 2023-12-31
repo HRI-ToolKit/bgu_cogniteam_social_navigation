@@ -7,9 +7,9 @@ class Oval:
         self.point2d = point2d
         self.deg_angle = deg_angle
         self.right_x = right_x
-        self.left_x =   left_x
+        self.left_x =   -1.0 * left_x
         self.forward_y = forward_y
-        self.backward_y = backward_y
+        self.backward_y = -1.0* backward_y
         self.resolution = resolution
 
         print('point2d ' + str(point2d ))

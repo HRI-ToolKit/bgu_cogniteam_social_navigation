@@ -189,30 +189,36 @@ class SocialNavigationUI():
             # Check if a file was selected
             if file_path:
                 try:
-                    # Open the selected JSON file and parse its content
-                    with open(file_path, 'r') as file:
-                        json_data = json.load(file)
-                        # Access the 'persons' list in the parsed JSON data
-                    persons_list = json_data.get("persons", [])
 
-                    # Iterate through each person in the list
-                    self.persons = []
-                    for person in persons_list:
+                    try:
+                        # Open the selected JSON file and parse its content
+                        with open(file_path, 'r') as file:
+                            json_data = json.load(file)
+                            # Access the 'persons' list in the parsed JSON data
+                        persons_list = json_data.get("persons", [])
 
-                        position_x = float(person.get("position_x", 0))
-                        position_y = float(person.get("position_y", 0))
-                        yaw_deg_angle = float(person.get("yaw_deg_angle", 0))
-                        right_x = float(person.get("right_x", 0))
-                        left_x = float(person.get("left_x", 0))
-                        forward_y = float(person.get("forward_y", 0))
-                        backward_y = float(person.get("backward_y", 0))
+                        # Iterate through each person in the list
+                        self.persons = []
+                        for person in persons_list:
 
-                        person = Person((position_x, position_y), yaw_deg_angle, 
-                            self.map_resolution, right_x, left_x, forward_y, backward_y )
+                            position_x = float(person.get("position_x", 0))
+                            position_y = float(person.get("position_y", 0))
+                            yaw_deg_angle = float(person.get("yaw_deg_angle", 0))
+                            right_x = float(person.get("left_x", 0)) # becaus of flip issue left is right and right is left
+                            left_x = float(person.get("right_x", 0))
+                            forward_y = float(person.get("forward_y", 0))
+                            backward_y = float(person.get("backward_y", 0))
 
-                        self.persons.append(person)
-                        # Do something with the extracted data
-                        self.ros_wrapper.get_logger().info(f"Person: {position_x}, {position_y}, {yaw_deg_angle}, {right_x}, {left_x}, {forward_y}, {backward_y}")
+                            person = Person((position_x, position_y), yaw_deg_angle, 
+                                self.map_resolution, right_x, left_x, forward_y, backward_y )
+
+                            self.persons.append(person)
+                            # Do something with the extracted data
+                            self.ros_wrapper.get_logger().info(f"Person: {position_x}, {position_y}, {yaw_deg_angle}, {right_x}, {left_x}, {forward_y}, {backward_y}")
+                    except json.JSONDecodeError as e:
+                        # Handle JSON decoding errors
+                        messagebox.showerror("error", "error with Json file data") 
+                        return
 
                     self.load_map()
 
