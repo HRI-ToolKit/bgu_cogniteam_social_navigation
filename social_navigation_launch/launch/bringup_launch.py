@@ -127,8 +127,8 @@ def generate_launch_description():
                               'map_subscribe_transient_local': 'true'}.items()),
         
         # Declare launch arguments for initial pose x and y
-        DeclareLaunchArgument('initial_pose_x', default_value='-5.0',description=''),
-        DeclareLaunchArgument('initial_pose_y', default_value='7.0',description=''),
+        DeclareLaunchArgument('initial_pose_x', default_value='-1.0',description=''),
+        DeclareLaunchArgument('initial_pose_y', default_value='-4.0',description=''),
 
         Node(
             package='tf2_ros',
