@@ -45,13 +45,12 @@ class SocialNavigationUI():
         self.num_of_persons = 1
         self.persons = None
         
-        self.ros_wrapper.declare_parameter('initial_pose_x', 0.0)
-        initial_pose_x = self.ros_wrapper.get_parameter('initial_pose_x').get_parameter_value().double_value 
-        self.ros_wrapper.declare_parameter('initial_pose_y', 0.0)
-        initial_pose_y = self.ros_wrapper.get_parameter('initial_pose_y').get_parameter_value().double_value 
+        # self.ros_wrapper.declare_parameter('initial_pose_x', 0.0)
+        # initial_pose_x = self.ros_wrapper.get_parameter('initial_pose_x').get_parameter_value().double_value 
+        # self.ros_wrapper.declare_parameter('initial_pose_y', 0.0)
+        # initial_pose_y = self.ros_wrapper.get_parameter('initial_pose_y').get_parameter_value().double_value 
 
-        self.ros_wrapper.get_logger().info('initial_pose_y ' +str(initial_pose_y))
-        self.robot_position = (initial_pose_x,initial_pose_y, 0) # take from the launch
+        self.robot_position = self.ros_wrapper.get_initial_x_y()#(initial_pose_x,initial_pose_y, 0) # take from the launch
 
         self.ros_wrapper.declare_parameter('map', '')
         self.map_path = self.ros_wrapper.get_parameter('map').get_parameter_value().string_value 
@@ -69,7 +68,14 @@ class SocialNavigationUI():
         # self.update_map_button.pack(pady=10) 
 
         self.update_map_button = tk.Button(self.root, text="upload persons", command=self.uploadPersonsCmd)
-        self.update_map_button.pack(pady=10)       
+        self.update_map_button.pack(pady=10)
+
+        self.update_robot_position_button = tk.Button(self.root, text="save robot position", command=self.saveRobotPositionCmd)
+        self.update_robot_position_button.pack(pady=10)
+
+        # Create a text field (Entry widget)
+        self.robot_location_text_field = tk.Entry(self.root, width=10)
+        self.robot_location_text_field.pack()       
        
         self.image_viewer = tk.Label(self.root)
         self.image_viewer.pack(pady=10)      
@@ -86,6 +92,8 @@ class SocialNavigationUI():
 
     def set_path(self):
         
+        self.ros_wrapper.set_robot_x_y(self.robot_position[0], self.robot_position[1])
+
         path = self.ros_wrapper.calculatePath(self.goal)
 
         self.rgb_image = cv2.cvtColor(self.cv_map, cv2.COLOR_GRAY2RGB)
@@ -157,6 +165,8 @@ class SocialNavigationUI():
         
 
     def on_mouse_click(self, event):
+        self.ros_wrapper.set_robot_x_y(self.robot_position[0], self.robot_position[1])
+
         # Get the x and y coordinates of the mouse click
         x = event.x
         y = event.y
@@ -177,6 +187,31 @@ class SocialNavigationUI():
         tk_image = ImageTk.PhotoImage(self.mouse_image)
         self.image_viewer.configure(image=tk_image)
         self.image_viewer.image = tk_image  # Keep a reference to avoid garbage collection issues
+
+
+    def saveRobotPositionCmd(self):
+        try:
+            entered_text = self.robot_location_text_field.get()
+            
+            x_y_str = entered_text.split(',')
+            self.robot_position = (float(x_y_str[0]), float(x_y_str[1]))
+            
+            self.ros_wrapper.get_logger().info(f"{self.robot_position}")
+            
+            self.ros_wrapper.set_robot_x_y(self.robot_position[0], self.robot_position[1])
+
+            self.load_map()
+
+            self.drawRobotPosition()
+
+            if self.persons != None:
+                self.drawPersons()
+
+            self.setImageViewer()
+
+            
+        except ValueError as e:
+            messagebox.showerror("error", "invalid robot's x,y values") 
 
     def uploadPersonsCmd(self):
 
@@ -353,27 +388,5 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
-
-# def main(args=None):
-#     rclpy.init(args=args)
-#     # Load the grayscale image
-#     img = cv2.imread('/home/yakir/bgu_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/map.pgm', cv2.IMREAD_GRAYSCALE)
-
-#     # Check if the image is loaded successfully
-#     if img is None:
-#         print("Error: Unable to load the image.")
-        
-
-#     # Change all pixels with intensity 255 to 254
-#     img[(img != 254) & (img != 0)] = 254
-
-#     # Save the modified image as a PGM file
-#     cv2.imwrite('/home/yakir/bgu_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/map.pgm', img)
-
-
-
-# if __name__ == "__main__":
-#     main()
-
 
     

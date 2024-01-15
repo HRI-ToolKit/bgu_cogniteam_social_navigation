@@ -5,6 +5,8 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup,ReentrantCallbackGroup
 from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import String
+import tf2_ros
+from geometry_msgs.msg import TransformStamped
 
 
 # action for nav2
@@ -21,16 +23,26 @@ import math
 import time
 
 
+
+
+
 class RosWrapper(Node):
     
     def __init__(self, executor):
 
         super().__init__('social_navigation_ui_node')
 
+        self.x = -1.0
+        self.y = -4.0
+
         self.executor:MultiThreadedExecutor = executor
-       
+
         self.actions_cb_group = MutuallyExclusiveCallbackGroup()
 
+        self.tf_cb_group = MutuallyExclusiveCallbackGroup()
+        self.tf_broadcaster = tf2_ros.StaticTransformBroadcaster(self)
+
+        self.tf_timer = self.create_timer(0.1, self.broadcast_transform, self.tf_cb_group)  # 5 Hz (0.2 seconds interval)
 
         self._action_client_goal = ActionClient(self, NavigateToPose, '/navigate_to_pose',callback_group=self.actions_cb_group)
         self._action_client_goal_path = ActionClient(self, ComputePathToPose, '/compute_path_to_pose',callback_group=self.actions_cb_group)
@@ -65,6 +77,35 @@ class RosWrapper(Node):
         
         self.persons_publisher = self.create_publisher(String, '/persons', 10)
 
+
+    def broadcast_transform(self):
+        transform_stamped = TransformStamped()
+
+        transform_stamped.header.stamp = self.get_clock().now().to_msg()
+        transform_stamped.header.frame_id = 'odom'
+        transform_stamped.child_frame_id = 'base_footprint'
+
+        transform_stamped.transform.translation.x = self.x  # Adjust the translation values
+        transform_stamped.transform.translation.y = self.y
+        transform_stamped.transform.translation.z = 0.0
+
+        transform_stamped.transform.rotation.x = 0.0
+        transform_stamped.transform.rotation.y = 0.0
+        transform_stamped.transform.rotation.z = 0.0
+        transform_stamped.transform.rotation.w = 1.0
+
+        self.get_logger().info('transform_stamped!!')
+
+        self.tf_broadcaster.sendTransform(transform_stamped)
+
+    def get_initial_x_y(self):
+
+        return (self.x, self.y)
+
+    def set_robot_x_y(self, x, y):
+
+        self.x=x
+        self.y=y
 
     def publishPersons(self, str_persons):
 

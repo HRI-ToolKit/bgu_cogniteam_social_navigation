@@ -130,17 +130,17 @@ def generate_launch_description():
         DeclareLaunchArgument('initial_pose_x', default_value='-1.0',description=''),
         DeclareLaunchArgument('initial_pose_y', default_value='-4.0',description=''),
 
+        # Node(
+        #     package='tf2_ros',
+        #     executable='static_transform_publisher',
+        #     output='screen',
+        #     arguments=[
+        #         LaunchConfiguration('initial_pose_x'),
+        #         LaunchConfiguration('initial_pose_y'),
+        #         '0', '0', '0', '0', 'odom', 'base_footprint'
+        #     ]
+        # ),
         Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            output='screen',
-            arguments=[
-                LaunchConfiguration('initial_pose_x'),
-                LaunchConfiguration('initial_pose_y'),
-                '0', '0', '0', '0', 'odom', 'base_footprint'
-            ]
-        )
-        ,Node(
             name='camera_link_camera_color_optical_frame_tf_node',
             package='tf2_ros',
             executable='static_transform_publisher',
@@ -152,8 +152,8 @@ def generate_launch_description():
             package='social_navigation_ui',
             executable='social_navigation_ui_node',
             parameters=[
-                {'initial_pose_x': LaunchConfiguration('initial_pose_x')},
-                {'initial_pose_y': LaunchConfiguration('initial_pose_y')},
+                # {'initial_pose_x': LaunchConfiguration('initial_pose_x')},
+                # {'initial_pose_y': LaunchConfiguration('initial_pose_y')},
                 {'map':  os.path.join(social_navigation_dir,'')}]#'/home/yakir/bgu_cogniteam_social_navigation_ws/src/bgu_cogniteam_social_navigation/social_navigation_ui/'}]
 
         ),
