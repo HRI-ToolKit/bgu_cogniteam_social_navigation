@@ -3,11 +3,20 @@
     {
       "position_x": "-1.36",
       "position_y": "6.0",
-      "yaw_deg_angle": "45",
-      "right_x": "0.7",
-      "left_x": "0.4",
+      "yaw_deg_angle": "180",
+      "right_x": "0.8",
+      "left_x": "0.5",
       "forward_y": "3.6",
       "backward_y": "0.8"
+    },
+    {
+      "position_x": "-4",
+      "position_y": "-5.0",
+      "yaw_deg_angle": "45",
+      "right_x": "0.5",
+      "left_x": "0.3",
+      "forward_y": "2.2",
+      "backward_y": "1.8"
     }    
   ]
   

@@ -13,6 +13,7 @@ class Person:
 
         self.oval = Oval(self.position, self.yaw_deg_angle, r_x, l_x, f_y, b_y, self.map_resolution )
 
+        self.is_oval_good = False
 
     def getPoints(self):
         
@@ -21,8 +22,9 @@ class Person:
 
         return ovalPoints
         
-    def setPoints(self, points):
+    def setFilledPoints(self, points):
 
         self.oval.setOvalPoints(points)
+        self.is_oval_good = True
         
 
