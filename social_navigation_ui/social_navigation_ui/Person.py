@@ -21,6 +21,8 @@ class Person:
 
         return ovalPoints
         
+    def setPoints(self, points):
 
+        self.oval.setOvalPoints(points)
         
 

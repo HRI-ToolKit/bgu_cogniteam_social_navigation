@@ -344,8 +344,24 @@ class SocialNavigationUI():
         pts = pts.reshape((-1, 1, 2))
 
         # Draw the polygon on the image
-        cv2.fillPoly(self.rgb_image, [pts], color=(147,112,219))
+        # cv2.fillPoly(self.rgb_image, [pts], color=(147,112,219))
+
+        height, width, channels = self.rgb_image.shape
+        mask = np.zeros((height, width), dtype=np.uint8)
+        cv2.fillPoly(mask, [pts], color=255)
+        filled_points = np.column_stack(np.where(mask != 0))
         
+        filled_points_m = []
+        for p in filled_points:
+            y, x = p
+            # Draw a green circle (you can customize the radius and thickness)            
+            filled_points_m.append(convert_pix_to_pose((x,y),  self.map_resolution, 
+                self.map_origin_position_x, self.map_origin_position_y))
+            self.rgb_image[y, x] = (147,112,219)
+
+        person.setPoints(filled_points_m)      
+
+
         # Length of the arrow
         arrow_length = convert_meters_to_pix(1.0, self.map_resolution)
 

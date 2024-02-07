@@ -37,28 +37,53 @@ class Oval:
         yp = self.forward_y
         yn = self.backward_y
 
+
         X = []
         Y = []
 
         x = np.arange(0, xp + self.resolution, self.resolution)
-        y = np.sqrt((1 - (x ** 2 / xp ** 2)) * yp ** 2)
+        y = np.sqrt(np.maximum(0, (1 - (x**2 / xp**2)) * yp**2))
         X = np.concatenate([X, x])
         Y = np.concatenate([Y, y])
 
         x = np.arange(xp, 0 - self.resolution, -self.resolution)
-        y = -np.sqrt((1 - (x ** 2 / xp ** 2)) * yn ** 2)
+        y = -np.sqrt(np.maximum(0, (1 - (x**2 / xp**2)) * yn**2))
         X = np.concatenate([X, x])
         Y = np.concatenate([Y, y])
 
         x = np.arange(0, xn - self.resolution, -self.resolution)
-        y = -np.sqrt((1 - (x ** 2 / xn ** 2)) * yn ** 2)
+        y = -np.sqrt(np.maximum(0, (1 - (x**2 / xn**2)) * yn**2))
         X = np.concatenate([X, x])
         Y = np.concatenate([Y, y])
 
         x = np.arange(xn, 0 + self.resolution, self.resolution)
-        y = np.sqrt((1 - (x ** 2 / xn ** 2)) * yp ** 2)
+        y = np.sqrt(np.maximum(0, (1 - (x**2 / xn**2)) * yp**2))
         X = np.concatenate([X, x])
         Y = np.concatenate([Y, y])
+
+
+        # X = []
+        # Y = []
+
+        # x = np.arange(0, xp + self.resolution, self.resolution)
+        # y = np.sqrt((1 - (x ** 2 / xp ** 2)) * yp ** 2)
+        # X = np.concatenate([X, x])
+        # Y = np.concatenate([Y, y])
+
+        # x = np.arange(xp, 0 - self.resolution, -self.resolution)
+        # y = -np.sqrt((1 - (x ** 2 / xp ** 2)) * yn ** 2)
+        # X = np.concatenate([X, x])
+        # Y = np.concatenate([Y, y])
+
+        # x = np.arange(0, xn - self.resolution, -self.resolution)
+        # y = -np.sqrt((1 - (x ** 2 / xn ** 2)) * yn ** 2)
+        # X = np.concatenate([X, x])
+        # Y = np.concatenate([Y, y])
+
+        # x = np.arange(xn, 0 + self.resolution, self.resolution)
+        # y = np.sqrt((1 - (x ** 2 / xn ** 2)) * yp ** 2)
+        # X = np.concatenate([X, x])
+        # Y = np.concatenate([Y, y])
 
         # Create a list of 2D points from x and y values
         points = list(zip(X, Y))
@@ -102,7 +127,11 @@ class Oval:
 
         self.points = tmp
         return self.points
-        
+
+    def setOvalPoints(self, points):
+
+        self.points = points 
+            
 # oval = Oval((0.0,0.0), 31, 0.25, -0.7, 1, -0.5, 0.04)
 # print(oval.getOvalPoints())
 # point2d (0.0, 0.0)
